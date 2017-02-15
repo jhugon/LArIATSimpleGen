@@ -1,5 +1,6 @@
 import ROOT
 from ROOT import *
+from math import pi, sin, cos
 import sys,os
 import argparse
 
@@ -17,6 +18,7 @@ treeName  = args.treeName
 
 f = ROOT.TFile(fname)
 t = f.Get(treeName)
+#t.Print()
 
 
 hwcPTot = TH1F("hwcPTot","hwcPTot",200,0,2000)
@@ -43,44 +45,49 @@ hwcXVsYVsP  = TH3F("hwcXVsYVsP","hwcXVsYVsP", 200 , 20., 40., 140, -7., 7., 200 
 hWC4X    = TH1F("hWC4X","hWC4X"  , 200 , 20., 40.)
 hWC4Y    = TH1F("hWC4Y","hWC4Y"  , 140 , -7.,  7.)
 
+print "{} Events Total".format(t.GetEntries())
 print "I'm looping on your tree, this might take some minutes"
 stupidCounter = 0 
 for event in t:
     stupidCounter += 1
+    #if stupidCounter > 1000: break
     if not stupidCounter % 10000.:
         print "Event: ", stupidCounter 
-    if event.wcP[0] > 10:
-        hwcPTot.Fill(event.wcP[0])
-        hwcPxTot.Fill(event.wcPx[0])
-        hwcPyTot.Fill(event.wcPy[0])
-        hwcPzTot.Fill(event.wcPz[0])
-        hwcThetaTot.Fill(event.wctrk_theta[0])
-        hwcPhiTot  .Fill(event.wctrk_phi[0])
+    if event.nwctrks < 1:
+        continue
+    wcP = event.wctrk_momentum[0]
+    if wcP > 10:
+        theta  = event.wctrk_theta[0]
+        phi  = event.wctrk_phi[0]
+        wcPx = wcP*sin(theta)*cos(phi)
+        wcPy = wcP*sin(theta)*sin(phi)
+        wcPz = wcP*cos(theta)
+        hwcPTot.Fill(wcP)
+        hwcPxTot.Fill(wcPx)
+        hwcPyTot.Fill(wcPy)
+        hwcPzTot.Fill(wcPz)
+        hwcThetaTot.Fill(theta)
+        hwcPhiTot  .Fill(phi)
 
-        WC4x = float(event.WC4xPos[0])/10.
-        WC4y = float(event.WC4yPos[0])/10.
+        WC4x = float(event.WC4xPos[0])#/10.
+        WC4y = float(event.WC4yPos[0])#/10.
 
         hWC4XvsY.Fill(WC4x,WC4y)
-        hPvsWC4Y.Fill(WC4y,event.wcP[0])
-        hPvsWC4X.Fill(WC4x,event.wcP[0])
-        hwcXVsYVsP.Fill(WC4x,WC4y,event.wcP[0])
+        hPvsWC4Y.Fill(WC4y,wcP)
+        hPvsWC4X.Fill(WC4x,wcP)
+        hwcXVsYVsP.Fill(WC4x,WC4y,wcP)
         hWC4X.Fill(WC4x)
         hWC4Y.Fill(WC4y)
 
-        if event.wctrk_phi[0]>0:
-            hwcPhiTotNotFUp  .Fill(event.wctrk_phi[0]) 
-            hwcPhiTotNotFUpDecentBinning  .Fill(event.wctrk_phi[0]) 
-            hwcPhiVsTheta.Fill(event.wctrk_theta[0],event.wctrk_phi[0])
-            hwcPhiVsP.Fill(event.wctrk_phi[0],event.wcP[0])
-            hwcThetaVsP.Fill(event.wctrk_theta[0],event.wcP[0])
-            hwcPhiVsThetaVsP.Fill(event.wctrk_theta[0],event.wctrk_phi[0],event.wcP[0])
-        else:
-            hwcPhiTotNotFUp  .Fill(event.wctrk_phi[0]+3.14159265*2) 
-            hwcPhiTotNotFUpDecentBinning  .Fill(event.wctrk_phi[0]+3.14159265*2) 
-            hwcPhiVsTheta.Fill(event.wctrk_theta[0],event.wctrk_phi[0]+3.14159265*2)
-            hwcPhiVsP.Fill(event.wctrk_phi[0]+3.14159265*2,event.wcP[0])
-            hwcThetaVsP.Fill(event.wctrk_theta[0],event.wcP[0])
-            hwcPhiVsThetaVsP.Fill(event.wctrk_theta[0],event.wctrk_phi[0]+3.14159265*2,event.wcP[0])
+        if phi<0:
+          phi += 2*pi
+
+        hwcPhiTotNotFUp.Fill(phi) 
+        hwcPhiTotNotFUpDecentBinning.Fill(phi) 
+        hwcPhiVsTheta.Fill(theta,phi)
+        hwcPhiVsP.Fill(phi,wcP)
+        hwcThetaVsP.Fill(theta,wcP)
+        hwcPhiVsThetaVsP.Fill(theta,phi,wcP)
 
 outFile = TFile("simpleGen.root","RECREATE")
 outFile.Add(hwcPTot)
