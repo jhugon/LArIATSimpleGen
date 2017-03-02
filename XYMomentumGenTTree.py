@@ -95,7 +95,8 @@ t.Branch( 'WC4Y'   , WC4Y    , 'WC4Y/F' )
 
 P = 0.
 #n_tries = 200000000
-n_tries = 20000000
+#n_tries = 20000000
+n_tries = 300000000
 for i in xrange(n_tries):
     randP          = random.uniform(0., 2000.)
     randPhi        = random.uniform(200., 400.)

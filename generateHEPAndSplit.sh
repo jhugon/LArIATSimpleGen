@@ -23,12 +23,12 @@ makehepandsplit () {
     echo "Output directory: $outdir"
     python generateHEPEvt.py $1 GeneratedEvents.root
     mkdir -p $outdir
-    split -l $neventstimes2 $infilename $outprefix 
+    split -l $neventstimes2 -d -a 5 $infilename $outprefix 
 }
 
 ##########################################################################
 
-basedir=/pnfs/lariat/scratch/users/jhugon/v06_15_00/HEPEvt_Pos_RunI_v03_v1
+basedir=/pnfs/lariat/scratch/users/jhugon/v06_15_00/HEPEvt_Pos_RunI_v03_v2
 #mkdir -p $basedir
 
 pdg=321
